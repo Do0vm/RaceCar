@@ -56,6 +56,8 @@ void Update() {
 void Draw() {
     BeginDrawing();
 
+    
+
     switch (currentGameState) {
     case START_SCREEN:
         DrawStartScreen();

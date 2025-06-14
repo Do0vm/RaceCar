@@ -1,16 +1,20 @@
 #pragma once
 
 #include "raylib.h"
+#include <cmath>
 class Car
 {
 private:
 	Vector2 mPosition;
 	Vector2 mSize;
-	float velocity;
-	float acceleration;
-	float rotationSpeed;
-	float maxVelocity;
-	float rotation;
+	Rectangle mCarRect;
+	float mVelocity;
+	float mAcceleration;
+	float mAngularAcceleration;
+	float mRotationSpeed;
+	float mMaxVelocity;
+	float mMaxAngularVelocity;
+	float mRotation;
 public:
 	Car(Rectangle rect, float initialRotation);
 	~Car();

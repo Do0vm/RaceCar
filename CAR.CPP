@@ -6,11 +6,11 @@ Car::Car(Rectangle rect, float initialRotation)
 {
     mPosition = { rect.x, rect.y };
     mSize = { rect.width, rect.height };
-    velocity = 0;
-    acceleration = 0;
-    rotationSpeed = 2.5f;  // reasonable default
-    maxVelocity = 5.0f;    // reasonable default
-    rotation = initialRotation;
+    mVelocity = 0;
+    mAcceleration = 0;
+    mRotationSpeed = 2.5f;  // reasonable default
+    mMaxVelocity = 5.0f;    // reasonable default
+    mRotation = initialRotation;
 }
 
 Car::~Car()
@@ -32,24 +32,24 @@ void Car::Update()
 {
     // Basic controls (Arrow keys)
     if (IsKeyDown(KEY_UP)) {
-        velocity += 0.1f;
-        if (velocity > maxVelocity) velocity = maxVelocity;
+        mVelocity += 0.1f;
+        if (mVelocity > mMaxVelocity) mVelocity = mMaxVelocity;
     }
     else {
         // Slow down gradually
-        velocity *= 0.95f;
+        mVelocity *= 0.95f;
     }
 
     if (IsKeyDown(KEY_LEFT)) {
-        rotation -= rotationSpeed;
+        mRotation -= mRotationSpeed;
     }
     if (IsKeyDown(KEY_RIGHT)) {
-        rotation += rotationSpeed;
+        mRotation += mRotationSpeed;
     }
 
     // Update position based on velocity and rotation
-    mPosition.x += velocity * cosf(rotation * DEG2RAD);
-    mPosition.y += velocity * sinf(rotation * DEG2RAD);
+    mPosition.x += mVelocity * cosf(mRotation * DEG2RAD);
+    mPosition.y += mVelocity * sinf(mRotation * DEG2RAD);
 }
 
 void Car::Draw()
@@ -58,7 +58,7 @@ void Car::Draw()
     DrawRectanglePro(
         { mPosition.x, mPosition.y, mSize.x, mSize.y },
         { mSize.x / 2, mSize.y / 2 },
-        rotation,
+        mRotation,
         RED
     );
 }
