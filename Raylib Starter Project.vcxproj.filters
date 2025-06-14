@@ -24,6 +24,12 @@
     <ClCompile Include="GameState.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="CAR.CPP">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="MapHandler.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h">
@@ -33,6 +39,12 @@
       <Filter>Fichiers sources</Filter>
     </ClInclude>
     <ClInclude Include="GameState.h">
+      <Filter>Fichiers sources</Filter>
+    </ClInclude>
+    <ClInclude Include="MapHandler.h">
+      <Filter>Fichiers sources</Filter>
+    </ClInclude>
+    <ClInclude Include="Car.h">
       <Filter>Fichiers sources</Filter>
     </ClInclude>
   </ItemGroup>

@@ -12,8 +12,8 @@ Texture2D roadTexture;
 Font gameFont;
 double gameStartTime = 0.0;
 
-Texture2D roadStraightTexture;     
-Texture2D roadCornerTexture;      
+Texture2D roadStraightTexture;
+Texture2D roadCornerTexture;
 
 // TileType Enum values for reference:
  //GRASS = 0
@@ -26,56 +26,27 @@ Texture2D roadCornerTexture;
 
 
 int typeMap[MAP_ROWS][MAP_COLS] = {
-    //       0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-    /* 0*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    /* 1*/ {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}, // Top section
-    /* 2*/ {0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0}, // Upper curve
-    /* 3*/ {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0}, // Right side up
-    /* 4*/ {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0}, // Right outer
-    /* 5*/ {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0}, // Right straight
-    /* 6*/ {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0}, // Right down
-    /* 7*/ {0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0}, // Start/finish line
-    /* 8*/ {0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0}, // Cross section
-    /* 9*/ {0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0}, // After cross
-    /*10*/ {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0}, // Left side
-    /*11*/ {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0}, // Left straight
-    /*12*/ {0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0}, // Left curve
-    /*13*/ {0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}, // Bottom straight
-    /*14*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
+    {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+    {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+    {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+    {0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0},
+    {0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0},
+    {0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0},
+    {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 void LoadGameResources() {
-    // GameState.cpp - in LoadGameResources()
-
-  // Make sure you have an 'assets' folder next to your executable,
-  // containing 'tile_grass.png' and 'road_straight.png' (or similar names from Kenney pack)
-
     grassTexture = LoadTexture("assets/tile_grass.png");
-    if (grassTexture.id == 0) {
-        TraceLog(LOG_WARNING, "[!] FAILED to load texture: assets/tile_grass.png");
-    }
-    else {
-        TraceLog(LOG_INFO, "[i] Loaded texture: assets/tile_grass.png (ID: %d)", grassTexture.id);
-    }
-
-    // For now, let's assume you have 'road_straight.png' for vertical roads
-    // and 'road_corner.png' for a corner piece.
     roadStraightTexture = LoadTexture("assets/road_straight.png");
-    if (roadStraightTexture.id == 0) {
-        TraceLog(LOG_WARNING, "[!] FAILED to load texture: assets/road_straight.png");
-    }
-    else {
-        TraceLog(LOG_INFO, "[i] Loaded texture: assets/road_straight.png (ID: %d)", roadStraightTexture.id);
-    }
-
     roadCornerTexture = LoadTexture("assets/road_corner.png");
-    if (roadCornerTexture.id == 0) {
-        TraceLog(LOG_WARNING, "[!] FAILED to load texture: assets/road_corner.png");
-    }
-    else {
-        TraceLog(LOG_INFO, "[i] Loaded texture: assets/road_corner.png (ID: %d)", roadCornerTexture.id);
-    }
-
     gameFont = GetFontDefault();
 }
 
@@ -84,21 +55,28 @@ void UnloadGameResources() {
     UnloadTexture(roadStraightTexture);
     UnloadTexture(roadCornerTexture);
     CleanupMap();
-    
 }
 
 void InitGame() {
-    currentGameState = START_SCREEN; // Set initial state
-    // Map and car initialization will happen when transitioning from START_SCREEN to PLAYING
+    currentGameState = START_SCREEN;
 }
 
+// GameState.cpp -> inside InitMap() function - CORRECTED
+
 void InitMap() {
-    CleanupMap(); // Clear previous map if any (e.g., for restarting game)
+    CleanupMap();
     for (int col = 0; col < MAP_COLS; col++) {
         for (int row = 0; row < MAP_ROWS; row++) {
-            // typeMap is [row][col], gameMap is [col][row] to match user's map[x][y]
             TileType currentType = static_cast<TileType>(typeMap[row][col]);
-            gameMap[col][row] = new Tile(col * TILE_WIDTH, row * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, currentType);
+
+            // FIX: Explicitly cast the calculated float positions back to int.
+            // This acknowledges the conversion and removes the warning.
+            int posX = static_cast<int>(col * TILE_WIDTH);
+            int posY = static_cast<int>(row * TILE_HEIGHT);
+            int sizeX = static_cast<int>(TILE_WIDTH);
+            int sizeY = static_cast<int>(TILE_HEIGHT);
+
+            gameMap[col][row] = new Tile(posX, posY, sizeX, sizeY, currentType);
         }
     }
 }
@@ -106,10 +84,8 @@ void InitMap() {
 void CleanupMap() {
     for (int col = 0; col < MAP_COLS; col++) {
         for (int row = 0; row < MAP_ROWS; row++) {
-            if (gameMap[col][row] != nullptr) {
-                delete gameMap[col][row];
-                gameMap[col][row] = nullptr;
-            }
+            delete gameMap[col][row];
+            gameMap[col][row] = nullptr;
         }
     }
 }
@@ -118,7 +94,7 @@ void DrawMap() {
     for (int col = 0; col < MAP_COLS; col++) {
         for (int row = 0; row < MAP_ROWS; row++) {
             if (gameMap[col][row] != nullptr) {
-                // Pass the specific road textures
+                // FIX: Pass all three required textures to the Draw function.
                 gameMap[col][row]->Draw(grassTexture, roadStraightTexture, roadCornerTexture);
             }
         }
@@ -128,9 +104,8 @@ void DrawMap() {
 void UpdateStartScreen() {
     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
         currentGameState = PLAYING;
-        InitMap(); // Initialize the map
-        gameStartTime = GetTime(); // Start the timer
-        // Initialize car here in the future
+        InitMap();
+        gameStartTime = GetTime();
     }
 }
 
@@ -144,59 +119,42 @@ void DrawStartScreen() {
     int titleTextWidth = MeasureText(titleText, titleFontSize);
     int promptTextWidth = MeasureText(promptText, promptFontSize);
 
-    // In DrawStartScreen()
-    DrawTextEx(gameFont, titleText, { static_cast<float>(SCREEN_WIDTH - titleTextWidth) / 2.0f, static_cast<float>(SCREEN_HEIGHT) / 2.0f - 50.0f }, titleFontSize, 2.0f, RAYWHITE); // Also made 50 and 2 float literals
-    DrawTextEx(gameFont, promptText, { static_cast<float>(SCREEN_WIDTH - promptTextWidth) / 2.0f, static_cast<float>(SCREEN_HEIGHT) / 2.0f + 10.0f }, promptFontSize, 2.0f, LIGHTGRAY); 
+    DrawTextEx(gameFont, titleText, { (SCREEN_WIDTH - titleTextWidth) / 2.0f, SCREEN_HEIGHT / 2.0f - 50.0f }, static_cast<float>(titleFontSize), 2.0f, RAYWHITE);
+    DrawTextEx(gameFont, promptText, { (SCREEN_WIDTH - promptTextWidth) / 2.0f, SCREEN_HEIGHT / 2.0f + 10.0f }, static_cast<float>(promptFontSize), 2.0f, LIGHTGRAY);
 }
 
 void UpdatePlayingScreen() {
-    // Future: Update car movement, collision detection, etc.
+    // Future implementation
 }
 
 void DrawPlayingScreen() {
-    ClearBackground(DARKGREEN); // A base color if map doesn't cover everything
-    DrawMap();
+    ClearBackground(DARKGREEN);
+    // DrawMap(); // You can replace the old DrawMap call with this new one
+    map.Draw(grassTexture, roadStraightTexture, roadCornerTexture); // Correct call
     DrawTimer();
-    // Future: DrawCar();
 }
 
 void DrawTimer() {
     double elapsedTime = GetTime() - gameStartTime;
-
-    // Using stringstream for formatting to two decimal places
     std::stringstream stream;
     stream << std::fixed << std::setprecision(2) << elapsedTime;
     std::string timeString = "Time: " + stream.str();
 
-    // In DrawTimer()
     DrawTextEx(gameFont, timeString.c_str(), { 10.0f, 10.0f }, 20.0f, 2.0f, WHITE);
 }
 
-
 void UpdateDrawFrame() {
-    // Update based on current game state
     switch (currentGameState) {
-    case START_SCREEN:
-        UpdateStartScreen();
-        break;
-    case PLAYING:
-        UpdatePlayingScreen();
-        break;
-        // case GAME_OVER: UpdateGameOverScreen(); break;
+    case START_SCREEN: UpdateStartScreen(); break;
+    case PLAYING: UpdatePlayingScreen(); break;
     default: break;
     }
 
-    // Draw based on current game state
-    BeginDrawing();
+    BeginDrawing(); // You probably have Begin/End Drawing here already
     switch (currentGameState) {
-    case START_SCREEN:
-        DrawStartScreen();
-        break;
-    case PLAYING:
-        DrawPlayingScreen();
-        break;
-        // case GAME_OVER: DrawGameOverScreen(); break;
+    case START_SCREEN: DrawStartScreen(); break;
+    case PLAYING: DrawPlayingScreen(); break; // This now correctly draws the map
     default: break;
     }
-    EndDrawing();
+    EndDrawing(); // And here
 }

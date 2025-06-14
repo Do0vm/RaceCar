@@ -133,13 +133,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CAR.CPP" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MapHandler.cpp" />
     <ClCompile Include="Tile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Car.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="GameState.h" />
+    <ClInclude Include="MapHandler.h" />
     <ClInclude Include="Tile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
