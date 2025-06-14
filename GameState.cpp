@@ -1,30 +1,21 @@
 ﻿#include "GameState.h"
 #include "Constants.h"
-#include <string> // For std::to_string
-#include <iomanip> // For std::fixed and std::setprecision
-#include <sstream> // For std::stringstream
+#include "Tile.h"       // Make sure to include the Tile header
+
+#include <string>
+#include <iomanip>
+#include <sstream>
 
 // Define Global Variables
 GameScreen currentGameState;
 Tile* gameMap[MAP_COLS][MAP_ROWS];
 Texture2D grassTexture;
-Texture2D roadTexture;
+Texture2D roadStraightTexture;
+Texture2D roadCornerTexture;
 Font gameFont;
 double gameStartTime = 0.0;
 
-Texture2D roadStraightTexture;
-Texture2D roadCornerTexture;
-
-// TileType Enum values for reference:
- //GRASS = 0
- //ROAD_STRAIGHT_VERTICAL = 1
- //ROAD_STRAIGHT_HORIZONTAL = 2
- //ROAD_CORNER_NW = 3 (Connects North to West)
- //ROAD_CORNER_NE = 4 (Connects North to East)
- //ROAD_CORNER_SW = 5 (Connects South to West)
- //ROAD_CORNER_SE = 6 (Connects South to East)
-
-
+// Tile layout definition
 int typeMap[MAP_ROWS][MAP_COLS] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0},
@@ -61,22 +52,22 @@ void InitGame() {
     currentGameState = START_SCREEN;
 }
 
-// GameState.cpp -> inside InitMap() function - CORRECTED
-
 void InitMap() {
-    CleanupMap();
+    CleanupMap(); // Clear any existing map data
     for (int col = 0; col < MAP_COLS; col++) {
         for (int row = 0; row < MAP_ROWS; row++) {
             TileType currentType = static_cast<TileType>(typeMap[row][col]);
 
-            // FIX: Explicitly cast the calculated float positions back to int.
-            // This acknowledges the conversion and removes the warning.
-            int posX = static_cast<int>(col * TILE_WIDTH);
-            int posY = static_cast<int>(row * TILE_HEIGHT);
-            int sizeX = static_cast<int>(TILE_WIDTH);
-            int sizeY = static_cast<int>(TILE_HEIGHT);
+            // --- FIX: Correctly create Tile objects ---
+            // 1. Create Vector2 for position and size
+            Vector2 position = { (float)col * TILE_WIDTH, (float)row * TILE_HEIGHT };
+            Vector2 size = { (float)TILE_WIDTH, (float)TILE_HEIGHT };
 
-            gameMap[col][row] = new Tile(posX, posY, sizeX, sizeY, currentType);
+            // 2. Construct the tile with the correct constructor
+            gameMap[col][row] = new Tile(position, size);
+
+            // 3. Set the tile's type using the separate method
+            gameMap[col][row]->SetType(currentType);
         }
     }
 }
@@ -84,8 +75,10 @@ void InitMap() {
 void CleanupMap() {
     for (int col = 0; col < MAP_COLS; col++) {
         for (int row = 0; row < MAP_ROWS; row++) {
-            delete gameMap[col][row];
-            gameMap[col][row] = nullptr;
+            if (gameMap[col][row] != nullptr) {
+                delete gameMap[col][row];
+                gameMap[col][row] = nullptr;
+            }
         }
     }
 }
@@ -94,7 +87,11 @@ void DrawMap() {
     for (int col = 0; col < MAP_COLS; col++) {
         for (int row = 0; row < MAP_ROWS; row++) {
             if (gameMap[col][row] != nullptr) {
-                // FIX: Pass all three required textures to the Draw function.
+                // --- FIX: This call now matches the intended logic ---
+                // IMPORTANT: For this to compile, you MUST update your Tile class.
+                // In Tile.h, change Draw() to:
+                // 
+                // Then, implement this new function in Tile.cpp.
                 gameMap[col][row]->Draw(grassTexture, roadStraightTexture, roadCornerTexture);
             }
         }
@@ -124,13 +121,17 @@ void DrawStartScreen() {
 }
 
 void UpdatePlayingScreen() {
-    // Future implementation
+    // Car update logic, etc., will go here
 }
 
 void DrawPlayingScreen() {
     ClearBackground(DARKGREEN);
-    // DrawMap(); // You can replace the old DrawMap call with this new one
-    map.Draw(grassTexture, roadStraightTexture, roadCornerTexture); // Correct call
+
+    // --- FIX: Call the global DrawMap function to render the tiles ---
+    DrawMap();
+
+    // Other gameplay elements like the car would be drawn here
+
     DrawTimer();
 }
 
@@ -144,17 +145,31 @@ void DrawTimer() {
 }
 
 void UpdateDrawFrame() {
+    // Update logic
     switch (currentGameState) {
-    case START_SCREEN: UpdateStartScreen(); break;
-    case PLAYING: UpdatePlayingScreen(); break;
-    default: break;
+    case START_SCREEN:
+        UpdateStartScreen();
+        break;
+    case PLAYING:
+        UpdatePlayingScreen();
+        break;
+    default:
+        break;
     }
 
-    BeginDrawing(); // You probably have Begin/End Drawing here already
+    // Drawing logic
+    BeginDrawing();
+
     switch (currentGameState) {
-    case START_SCREEN: DrawStartScreen(); break;
-    case PLAYING: DrawPlayingScreen(); break; // This now correctly draws the map
-    default: break;
+    case START_SCREEN:
+        DrawStartScreen();
+        break;
+    case PLAYING:
+        DrawPlayingScreen();
+        break;
+    default:
+        break;
     }
-    EndDrawing(); // And here
+
+    EndDrawing();
 }

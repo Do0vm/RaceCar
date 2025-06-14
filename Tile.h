@@ -12,28 +12,34 @@ enum TileType {
     ROAD_CORNER_NW = 3,
     ROAD_CORNER_NE = 4,
     ROAD_CORNER_SW = 5,
-    ROAD_CORNER_SE = 6
+    ROAD_CORNER_SE = 6,
+    EMPTY,
+    ROAD,
+    TURRET
 };
 
 class Tile
 {
 public:
-    // DECLARATION: Matches the definition in Tile.cpp (5 arguments)
-    Tile(int posX, int posY, int sizeX, int sizeY, TileType type);
-    ~Tile();
+    // Constructor uses Vector2 for consistency with raylib
+    Tile(Vector2 position, Vector2 size);
+    ~Tile() = default; // Default destructor is sufficient
 
-    void Load();
-    // DECLARATION: Matches the definition in Tile.cpp (3 arguments)
-    void Draw(Texture2D grassTexture, Texture2D roadStraightTexture, Texture2D roadCornerTexture);
     void Update();
-    void Unload();
-    void ChangeType(TileType type);
+    void Draw(Texture2D grass, Texture2D road, Texture2D corner) const;
+
+    // Public modifier
+    void SetType(TileType newType);
+
+    // Getters, marked const for read-only access
+    TileType GetType() const;
+    Vector2 GetPosition() const;
+    Vector2 GetSize() const;
+    Rectangle GetRect() const;
 
 private:
-    int mPosX;
-    int mPosY;
-    int mSizeX;
-    int mSizeY;
-    Color mColor;
+    Vector2 mPosition;
+    Vector2 mSize;
     TileType mType;
+    Color mColor;
 };
