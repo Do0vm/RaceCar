@@ -1,42 +1,30 @@
-
-#ifndef MAP_MANAGER_H
-#define MAP_MANAGER_H
+#ifndef MAPMANAGER_H
+#define MAPMANAGER_H
 
 #include "raylib.h"
 #include <vector>
 #include <string>
-
-// Forward declaration of the Tile class to avoid circular includes
-class Tile;
-
+#include "Tile.h" 
 class MapManager
 {
 public:
     MapManager();
     ~MapManager();
 
-    // Loads a map from a specified PNG file.
     void Load(const std::string& mapImagePath);
     void Unload();
-
     void Update();
-
-    // The Draw function now requires the textures to pass down to the tiles.
     void Draw(Texture2D grassTexture, Texture2D roadTexture);
 
-    // A helper function to get a tile at a specific grid coordinate.
     Tile* GetTileAt(int row, int col) const;
 
-private:
-    // A 2D vector to hold pointers to all the Tile objects.
-    std::vector<std::vector<Tile*>> mMap;
+    Tile* GetTileAtPixel(Vector2 pixelPosition) const;
 
-    // Keeps track of the map dimensions.
+private:
+    void ClearMap();
+    std::vector<std::vector<Tile*>> mMap;
     int mRows;
     int mCols;
-
-    // Clears the map and releases memory.
-    void ClearMap();
 };
 
-#endif // MAP_MANAGER_H
+#endif // MAPMANAGER_H

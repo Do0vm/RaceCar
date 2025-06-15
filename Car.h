@@ -2,56 +2,75 @@
 #define CAR_H
 
 #include "raylib.h"
+#include "MapHandler.h" 
 
+// --- Tunable Physics Constants ---
+const float CAR_VISUAL_SCALE = 0.15f;           
+const float COLLISION_RADIUS = 5.0f;          
+// --- Road Physics ---
+const float ROAD_ACCELERATION = 200.0f;        
+const float ROAD_MAX_SPEED = 100.0f;           
+const float ROAD_FRICTION = 300.0f;            
+const float ROAD_STEERING = 5.0f;              
 
-class Tile;
+// --- Grass Physics ---
+const float GRASS_ACCELERATION = 400.0f;       
+const float GRASS_MAX_SPEED = 150.0f;          
+const float GRASS_FRICTION = 1000.0f;         
+const float GRASS_STEERING = 1.0f;            
+
+// --- General Physics ---
+const float BRAKING_FORCE = 800.0f;            
+const float REVERSE_SPEED = -200.0f;           
+const float COLLISION_BOUNCE_FACTOR = -0.5f;  
 
 class Car
 {
 public:
-    // Constructor and Destructor
     Car(Vector2 initialPosition);
     ~Car();
 
-    // Core Functions
     void Load();
     void Unload();
-    void Update();
+    void Update(const MapManager& mapManager);
     void Draw() const;
 
-    // Public Methods
     void Bounce();
-    bool IsCollidingWithObject(const Tile& tile) const;
-    bool IsHoveringObject(const Tile& tile) const;
-    void Reset(Vector2 newPosition);
+    bool IsCollidingWithTile(const Tile& tile) const;
 
-    // Getters and Setters
+    // Resets the car to a starting state.
+    void Reset(Vector2 newPosition);
     void SetPosition(Vector2 pos);
+
+    // Getters
     Rectangle GetBoundingBox() const;
-    bool IsMovingForward() const;
+    Vector2 GetPosition() const { return mPosition; }
 
 private:
-    // Private Helper Functions
+    // Helper methods for internal logic
     void HandleInput();
-    void ApplyPhysics();
+    void ApplyPhysics(const MapManager& mapManager);
     void UpdateCollisionCircles();
 
-    // Member Variables
+    // Car State
     Vector2 mPosition;
     Vector2 mSize;
-    Texture2D mTexture;
-
-    // Physics State
     float mVelocity;
     float mRotation;
-    float mRotationSpeed;
-    bool mIsBouncing;
+
+    // Input state
+    float mAccelerationInput;
+    float mRotationInput;
     bool mIsBraking;
 
-    // Collision Shapes
+    bool mIsBouncing;
+
+    // Collision detection
     Vector2 mFrontCircleCenter;
-    Vector2 mMiddleCircleCenter;
     Vector2 mBackCircleCenter;
+
+    // Resources
+    Texture2D mTexture;
 };
 
-#endif // CAR_H
+#endif //CAR_H

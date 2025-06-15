@@ -1,29 +1,23 @@
 #include "Car.h"
 #include "Constants.h"
-#include <cmath>
-#include "Tile.h"
-
-
-#include "raylib.h"
+#include <cmath> 
+#include "Tile.h" // **FIX 1:** Include the full Tile definition.
 
 Car::Car(Vector2 initialPosition)
     : mPosition(initialPosition),
     mSize({ 0, 0 }),
     mVelocity(0.0f),
     mRotation(0.0f),
-    mRotationSpeed(0.0f),
+    mAccelerationInput(0.0f),
+    mRotationInput(0.0f),
+    mIsBraking(false),
     mTexture({ 0 }),
-    mIsBouncing(false),
-    mIsBraking(false)
+    mIsBouncing(false)
 {
 }
 
 Car::~Car()
 {
-    if (mTexture.id > 0)
-    {
-        Unload();
-    }
 }
 
 void Car::Load()
@@ -38,108 +32,103 @@ void Car::Unload()
     UnloadTexture(mTexture);
 }
 
-void Car::Update()
+void Car::Update(const MapManager& mapManager)
 {
-    HandleInput();
-    ApplyPhysics();
+    if (!mIsBouncing)
+    {
+        HandleInput();
+    }
+    ApplyPhysics(mapManager);
     UpdateCollisionCircles();
 }
 
 void Car::Draw() const
 {
     Rectangle source = { 0.0f, 0.0f, mSize.x, mSize.y };
-    Rectangle dest = { mPosition.x, mPosition.y, mSize.x, mSize.y };
-    Vector2 origin = { mSize.x / 2.0f, mSize.y / 2.0f };
+    Rectangle dest = { mPosition.x, mPosition.y, mSize.x * CAR_VISUAL_SCALE, mSize.y * CAR_VISUAL_SCALE };
+    Vector2 origin = { (mSize.x * CAR_VISUAL_SCALE) / 2.0f, (mSize.y * CAR_VISUAL_SCALE) / 2.0f };
     DrawTexturePro(mTexture, source, dest, origin, mRotation + 90.0f, WHITE);
 }
 
 void Car::HandleInput()
 {
-    float accelerationInput = 0.0f;
-    if (IsKeyDown(KEY_W)) accelerationInput = 9.0f;
-    if (IsKeyDown(KEY_S)) accelerationInput = -9.0f;
-
-    float turnInput = 0.0f;
-    if (IsKeyDown(KEY_A)) turnInput = -1.0f;
-    if (IsKeyDown(KEY_D)) turnInput = 1.0f;
-
+    mAccelerationInput = 0.0f;
+    if (IsKeyDown(KEY_W)) mAccelerationInput = 1.0f;
+    if (IsKeyDown(KEY_S)) mAccelerationInput = -1.0f;
     mIsBraking = IsKeyDown(KEY_SPACE);
-
-    if (accelerationInput != 0.0f && !mIsBouncing)
-    {
-        mVelocity += ACCELERATION * accelerationInput * GetFrameTime();
-    }
-
-    if (std::abs(mVelocity) > 1.0f && !mIsBouncing)
-    {
-        float turnEffect = turnInput * (mVelocity * STEERING_DRAG_FACTOR);
-        mRotationSpeed += ANGULAR_ACCELERATION * turnEffect * GetFrameTime();
-    }
+    mRotationInput = 0.0f;
+    if (IsKeyDown(KEY_A)) mRotationInput = -1.0f;
+    if (IsKeyDown(KEY_D)) mRotationInput = 1.0f;
 }
 
-void Car::ApplyPhysics()
+
+void Car::ApplyPhysics(const MapManager& mapManager)
 {
-    if (mIsBouncing)
+    // --- Determine Surface Properties ---
+    Tile* currentTile = mapManager.GetTileAtPixel(mPosition);
+    bool onGrass = (currentTile && currentTile->GetType() == TileType::GRASS);
+
+    float currentMaxSpeed = onGrass ? GRASS_MAX_SPEED : ROAD_MAX_SPEED;
+    float currentAcceleration = onGrass ? GRASS_ACCELERATION : ROAD_ACCELERATION;
+    float currentFriction = onGrass ? GRASS_FRICTION : ROAD_FRICTION;
+    float currentSteering = onGrass ? GRASS_STEERING : ROAD_STEERING;
+
+    // --- Apply Acceleration & Braking ---
+    if (mIsBraking)
     {
-        mVelocity += FRICTION * (mVelocity > 0 ? -1.0f : 1.0f) * GetFrameTime();
-        if (std::abs(mVelocity) < 10.0f)
-        {
-            mVelocity = 0.0f;
-            mIsBouncing = false;
-        }
-    }
-    else if (mIsBraking)
-    {
-        if (std::abs(mVelocity) > 0.0f)
-        {
-            mVelocity -= BRAKING_ACCELERATION * (mVelocity > 0 ? 1.0f : -1.0f) * GetFrameTime();
-        }
-        if (std::abs(mVelocity) < 1.0f) mVelocity = 0.0f;
+        mVelocity -= BRAKING_FORCE * (mVelocity > 0 ? 1.0f : -1.0f) * GetFrameTime();
     }
     else
     {
-        if (std::abs(mVelocity) > 0.0f)
+        mVelocity += currentAcceleration * mAccelerationInput * GetFrameTime();
+    }
+
+    // --- Apply Friction ---
+    if (std::abs(mAccelerationInput) < 0.1f && std::abs(mVelocity) > 0)
+    {
+        mVelocity -= currentFriction * (mVelocity > 0 ? 1.0f : -1.0f) * GetFrameTime();
+        if (std::abs(mVelocity) < 1.0f)
         {
-            mVelocity -= FRICTION * (mVelocity > 0 ? 1.0f : -1.0f) * GetFrameTime();
-            if (std::abs(mVelocity) < 1.0f) mVelocity = 0.0f;
+            mVelocity = 0;
         }
     }
 
-    if (std::abs(mRotationSpeed) > 0.0f)
+    // --- Clamp Velocity ---
+    if (mVelocity > currentMaxSpeed) mVelocity = currentMaxSpeed;
+    if (mVelocity < REVERSE_SPEED) mVelocity = REVERSE_SPEED;
+
+    // --- Apply Rotation ---
+    if (std::abs(mVelocity) > 1.0f)
     {
-        mRotationSpeed -= STEERING_FRICTION * (mRotationSpeed > 0 ? 1.0f : -1.0f) * GetFrameTime();
-        if (std::abs(mRotationSpeed) < 0.01f) mRotationSpeed = 0.0f;
+        float speedFactor = std::min(std::abs(mVelocity) / 200.0f, 1.0f);
+        mRotation += mRotationInput * currentSteering * speedFactor * (mVelocity > 0 ? 1.0f : -1.0f) * 100.0f * GetFrameTime();
     }
 
-    if (mVelocity > MAX_VELOCITY) mVelocity = MAX_VELOCITY;
-    if (mVelocity < MAX_REVERSE_VELOCITY) mVelocity = MAX_REVERSE_VELOCITY;
-    if (mRotationSpeed > MAX_ANGULAR_VELOCITY) mRotationSpeed = MAX_ANGULAR_VELOCITY;
-    if (mRotationSpeed < -MAX_ANGULAR_VELOCITY) mRotationSpeed = -MAX_ANGULAR_VELOCITY;
-
+    // --- Update Position ---
     float angleInRadians = mRotation * DEG2RAD;
     mPosition.x += mVelocity * cos(angleInRadians) * GetFrameTime();
     mPosition.y += mVelocity * sin(angleInRadians) * GetFrameTime();
-    mRotation += mRotationSpeed * mVelocity * GetFrameTime();
 
-    if (mRotation >= 360.0f) mRotation -= 360.0f;
-    if (mRotation < 0.0f) mRotation += 360.0f;
+    // --- Handle Bouncing State ---
+    if (mIsBouncing && std::abs(mVelocity) < 20.0f) {
+        mIsBouncing = false;
+    }
 }
+
 
 void Car::UpdateCollisionCircles()
 {
     float angleInRadians = mRotation * DEG2RAD;
     float cosA = cos(angleInRadians);
     float sinA = sin(angleInRadians);
-    float frontDistance = mSize.y / 2.0f - COLLISION_RADIUS;
-    float backDistance = mSize.y / 2.0f - COLLISION_RADIUS;
+
+    float frontDistance = (mSize.y * CAR_VISUAL_SCALE) / 2.0f - COLLISION_RADIUS;
 
     mFrontCircleCenter.x = mPosition.x + cosA * frontDistance;
     mFrontCircleCenter.y = mPosition.y + sinA * frontDistance;
 
-    mBackCircleCenter.x = mPosition.x - cosA * backDistance;
-    mBackCircleCenter.y = mPosition.y - sinA * backDistance;
-
-    mMiddleCircleCenter = mPosition;
+    mBackCircleCenter.x = mPosition.x - cosA * frontDistance;
+    mBackCircleCenter.y = mPosition.y - sinA * frontDistance;
 }
 
 void Car::Bounce()
@@ -147,37 +136,20 @@ void Car::Bounce()
     if (!mIsBouncing)
     {
         mVelocity *= COLLISION_BOUNCE_FACTOR;
-        mRotationSpeed = 0;
         mIsBouncing = true;
     }
 }
 
-bool Car::IsCollidingWithObject(const Tile& tile) const
+bool Car::IsCollidingWithTile(const Tile& tile) const
 {
-    // Get the collision rectangle directly from the tile.
     const Rectangle tileRect = tile.GetRect();
 
-    // Check collision for the front of the car if moving forward.
-    if (mVelocity > 0 && CheckCollisionCircleRec(mFrontCircleCenter, COLLISION_RADIUS, tileRect))
+    if (CheckCollisionCircleRec(mFrontCircleCenter, COLLISION_RADIUS, tileRect) ||
+        CheckCollisionCircleRec(mBackCircleCenter, COLLISION_RADIUS, tileRect))
     {
         return true;
     }
-
-    // Check collision for the back of the car if moving backward.
-    if (mVelocity < 0 && CheckCollisionCircleRec(mBackCircleCenter, COLLISION_RADIUS, tileRect))
-    {
-        return true;
-    }
-
-    // No collision detected.
     return false;
-}
-
-bool Car::IsHoveringObject(const Tile& tile) const
-{
-    // Get the collision rectangle and check for collision with the car's center.
-    const Rectangle tileRect = tile.GetRect();
-    return CheckCollisionCircleRec(mMiddleCircleCenter, COLLISION_RADIUS, tileRect);
 }
 
 void Car::Reset(Vector2 newPosition)
@@ -185,9 +157,9 @@ void Car::Reset(Vector2 newPosition)
     mPosition = newPosition;
     mVelocity = 0.0f;
     mRotation = 0.0f;
-    mRotationSpeed = 0.0f;
+    mAccelerationInput = 0.0f;
+    mRotationInput = 0.0f;
     mIsBouncing = false;
-    mIsBraking = false;
 }
 
 void Car::SetPosition(Vector2 pos)
@@ -198,10 +170,10 @@ void Car::SetPosition(Vector2 pos)
 
 Rectangle Car::GetBoundingBox() const
 {
-    return { mPosition.x - mSize.x / 2.0f, mPosition.y - mSize.y / 2.0f, mSize.x, mSize.y };
-}
-
-bool Car::IsMovingForward() const
-{
-    return mVelocity > 0;
+    return {
+        mPosition.x - (mSize.x * CAR_VISUAL_SCALE) / 2.0f,
+        mPosition.y - (mSize.y * CAR_VISUAL_SCALE) / 2.0f,
+        mSize.x * CAR_VISUAL_SCALE,
+        mSize.y * CAR_VISUAL_SCALE
+    };
 }

@@ -20,11 +20,11 @@ Font gameFont;
 // Map Selection
 std::vector<Texture2D> mapPreviews;
 std::vector<std::string> mapFilePaths;
-int selectedMapIndex = -1; // -1 means no map is chosen yet
+int selectedMapIndex = -1; 
 
 // Game Objects
 Car car = Car(Vector2{ 500, 600 });
-MapManager g_mapManager; // Define the global MapManager instance
+MapManager g_mapManager; 
 
 // Game-specific variables
 double gameStartTime = 0.0;
@@ -45,8 +45,7 @@ void InitGame() {
     LoadGameResources();
     car.Load();
 
-    // Find and load map previews
-    // This will look for map1.png, map2.png, etc.
+    
     int i = 1;
     while (true) {
         std::string path = "resources/maps/map" + std::to_string(i) + ".png";
@@ -56,7 +55,7 @@ void InitGame() {
             i++;
         }
         else {
-            break; // Stop when a map file is not found
+            break;
         }
     }
 }
@@ -64,8 +63,8 @@ void InitGame() {
 void UnloadGame() {
     UnloadGameResources();
     car.Unload();
-    g_mapManager.Unload(); // The manager handles its own cleanup
-    // Unload map preview textures
+    g_mapManager.Unload(); 
+    
     for (const auto& texture : mapPreviews) {
         UnloadTexture(texture);
     }
@@ -81,7 +80,7 @@ void UpdateDrawFrame() {
         UpdatePlayingScreen();
         break;
     case END_SCREEN:
-        // ToDo: Add logic for end screen if needed
+        
         break;
     }
 
@@ -95,7 +94,6 @@ void UpdateDrawFrame() {
         DrawPlayingScreen();
         break;
     case END_SCREEN:
-        // ToDo: Draw end screen
         break;
     }
     EndDrawing();
@@ -116,17 +114,13 @@ void UnloadGameResources() {
 }
 
 void UpdateStartScreen() {
-    // Check if the user presses a number key corresponding to a map
     for (int i = 0; i < mapPreviews.size(); ++i) {
-        // KEY_ONE corresponds to '1', KEY_TWO to '2', etc.
         if (IsKeyPressed(KEY_ONE + i)) {
             selectedMapIndex = i;
-            // Load the chosen map
             g_mapManager.Load(mapFilePaths[selectedMapIndex].c_str());
-            // Switch to the playing state
             currentGameState = PLAYING;
-            gameStartTime = GetTime(); // Start the timer
-            break; // Exit the loop once a map is chosen
+            gameStartTime = GetTime(); 
+            break;
         }
     }
 }
@@ -164,25 +158,38 @@ void DrawStartScreen() {
 
 
 void UpdatePlayingScreen() {
-    g_mapManager.Update();
-    car.Update();
-    // ToDo: Add logic for finishing a lap and transitioning to END_SCREEN
+    
+    car.Update(g_mapManager);
+
+    
+    Vector2 carPos = car.GetPosition();
+    int carGridX = static_cast<int>(carPos.x / TILE_WIDTH);
+    int carGridY = static_cast<int>(carPos.y / TILE_HEIGHT);
+
+    
+    for (int y = carGridY - 1; y <= carGridY + 1; ++y) {
+        for (int x = carGridX - 1; x <= carGridX + 1; ++x) {
+            Tile* tile = g_mapManager.GetTileAt(y, x);
+            // If the tile is grass and the car is touching it, trigger the bounce effect.
+            if (tile && tile->GetType() == TileType::GRASS && car.IsCollidingWithTile(*tile)) {
+                car.Bounce();
+            }
+        }
+    }
 }
+
 
 void DrawPlayingScreen() {
     ClearBackground(DARKGREEN);
 
-    // The MapManager now handles drawing the entire map.
     g_mapManager.Draw(grassTexture, roadTexture);
-
+    car.Update(g_mapManager);
     car.Draw();
-
-    // Example of drawing the car's bounding box for debugging
     Rectangle carBox = car.GetBoundingBox();
     DrawRectangleLinesEx(carBox, 2, RED);
 
     DrawTimer();
-    DrawFPS(10, 40); // Draw FPS below the timer
+    DrawFPS(10, 40); 
 }
 
 void DrawTimer() {
