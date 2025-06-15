@@ -1,7 +1,6 @@
-// MapHandler.cpp - CORRECTED
 
 #include "MapHandler.h"
-#include "Tile.h" // You MUST include Tile.h to know about the Tile class and TileType enum
+#include "Tile.h" 
 #include <iostream>
 
 MapManager::MapManager()
@@ -24,7 +23,6 @@ void MapManager::InitializeMap()
 }
 
 // FIX 1: The Load function now creates a default GRASS tile.
-// You will likely want to add logic here later to load from a file or array.
 void MapManager::Load()
 {
     for (int i = 0; i < rows; ++i) {
@@ -64,7 +62,6 @@ void MapManager::Update()
 }
 
 
-// FIX 2: The Draw function must accept the textures and pass them to each tile.
 void MapManager::Draw(Texture2D grassTexture, Texture2D roadStraightTexture, Texture2D roadCornerTexture)
 {
     for (int i = 0; i < rows; ++i) {
@@ -100,6 +97,6 @@ void MapManager::ResizeMap(int newRows, int newCols)
 {
     rows = newRows;
     cols = newCols;
-    InitializeMap(); // This already handles Unload and resize
+    InitializeMap(); 
     Load();
 }

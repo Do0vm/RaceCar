@@ -1,4 +1,3 @@
-// Tile.h - CORRECTED
 
 #pragma once
 

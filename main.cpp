@@ -2,12 +2,12 @@
 #include "Constants.h"
 #include "GameState.h"
 #include "MapHandler.h"
+#include "Car.h"
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 
 using namespace std;
-
 MapManager map;
 
 // Function declarations
@@ -40,7 +40,6 @@ void Load() {
     LoadGameResources();
     InitGame();
 
-    map.Load();
 }
 
 void Start() {
@@ -50,7 +49,6 @@ void Start() {
 
 void Update() {
     UpdateDrawFrame();
-    map.Update(); // Optional: add conditional if needed for certain states
 }
 
 void Draw() {
@@ -71,7 +69,6 @@ void Draw() {
         break;
     }
 
-    EndDrawing();
 }
 
 void Unload() {

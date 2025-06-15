@@ -1,7 +1,7 @@
 ﻿#include "GameState.h"
 #include "Constants.h"
-#include "Tile.h"       // Make sure to include the Tile header
-
+#include "Tile.h"       
+#include "Car.h"
 #include <string>
 #include <iomanip>
 #include <sstream>
@@ -14,6 +14,7 @@ Texture2D roadStraightTexture;
 Texture2D roadCornerTexture;
 Font gameFont;
 double gameStartTime = 0.0;
+Car car = Car(Vector2{ 500, 600 });
 
 // Tile layout definition
 int typeMap[MAP_ROWS][MAP_COLS] = {
@@ -83,20 +84,19 @@ void CleanupMap() {
     }
 }
 
-void DrawMap() {
-    for (int col = 0; col < MAP_COLS; col++) {
-        for (int row = 0; row < MAP_ROWS; row++) {
-            if (gameMap[col][row] != nullptr) {
-                // --- FIX: This call now matches the intended logic ---
-                // IMPORTANT: For this to compile, you MUST update your Tile class.
-                // In Tile.h, change Draw() to:
-                // 
-                // Then, implement this new function in Tile.cpp.
-                gameMap[col][row]->Draw(grassTexture, roadStraightTexture, roadCornerTexture);
-            }
-        }
-    }
-}
+//void DrawMap() {
+//    for (int col = 0; col < MAP_COLS; col++) {
+//        for (int row = 0; row < MAP_ROWS; row++) {
+//            if (gameMap[col][row] != nullptr) {
+//              
+//
+//
+//
+//                gameMap[col][row]->Draw(grassTexture, roadStraightTexture, roadCornerTexture);
+//            }
+//        }
+//    }
+//}
 
 void UpdateStartScreen() {
     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
@@ -121,16 +121,17 @@ void DrawStartScreen() {
 }
 
 void UpdatePlayingScreen() {
-    // Car update logic, etc., will go here
+    map.Update();       
+    car.Update();
 }
 
 void DrawPlayingScreen() {
     ClearBackground(DARKGREEN);
 
-    // --- FIX: Call the global DrawMap function to render the tiles ---
-    DrawMap();
+    map.Draw(grassTexture, roadStraightTexture, roadCornerTexture);
 
-    // Other gameplay elements like the car would be drawn here
+
+    car.Draw();
 
     DrawTimer();
 }

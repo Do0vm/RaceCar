@@ -4,7 +4,6 @@
 #include "Tile.h"
 
 
-// Forward declaration for raylib functions if not included in Car.h
 #include "raylib.h"
 
 Car::Car(Vector2 initialPosition)

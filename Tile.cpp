@@ -1,7 +1,6 @@
 #include "Tile.h"
 #include "Constants.h" // Include for TILE_COLOR constants
 
-// Constructor uses a member initializer list for efficiency
 Tile::Tile(Vector2 position, Vector2 size)
     : mPosition(position),
     mSize(size),

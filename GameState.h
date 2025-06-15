@@ -1,4 +1,3 @@
-// GameState.h (fixed version)
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 

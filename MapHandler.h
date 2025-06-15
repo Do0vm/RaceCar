@@ -1,12 +1,10 @@
-// MapHandler.h - CORRECTED
 
 #pragma once
 
 #include "raylib.h"
 #include <vector>
 
-// Forward declare Tile so the header knows it exists.
-// This is often better than including the full Tile.h in another header.
+
 class Tile;
 
 class MapManager
