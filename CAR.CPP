@@ -28,7 +28,7 @@ Car::~Car()
 
 void Car::Load()
 {
-    mTexture = LoadTexture("sprites/car.png");
+    mTexture = LoadTexture("resources/sprites/car.png");
     mSize = { (float)mTexture.width, (float)mTexture.height };
     UpdateCollisionCircles();
 }

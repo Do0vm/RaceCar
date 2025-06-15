@@ -20,7 +20,7 @@ enum TileType {
 class Tile
 {
 public:
-    // Constructor uses Vector2 for consistency with raylib
+ 
     Tile(Vector2 position, Vector2 size);
     ~Tile() = default; // Default destructor is sufficient
 

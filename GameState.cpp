@@ -51,6 +51,8 @@ void UnloadGameResources() {
 
 void InitGame() {
     currentGameState = START_SCREEN;
+    car.Load();
+
 }
 
 void InitMap() {
@@ -132,6 +134,10 @@ void DrawPlayingScreen() {
 
 
     car.Draw();
+
+    DrawCircleLines((int)car.GetBoundingBox().x + car.GetBoundingBox().width / 2,
+        (int)car.GetBoundingBox().y + car.GetBoundingBox().height / 2,
+        5, RED);
 
     DrawTimer();
 }
