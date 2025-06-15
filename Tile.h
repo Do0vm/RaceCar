@@ -1,40 +1,33 @@
 
-#pragma once
+#ifndef TILE_H
+#define TILE_H
 
 #include "raylib.h"
-
-
-enum TileType {
-    GRASS = 0,
-    ROAD_STRAIGHT_VERTICAL = 1,
-
-    EMPTY,
-    ROAD,
- 
-};
+#include "Constants.h"
 
 class Tile
 {
 public:
- 
+    // Constructor uses Vector2 for modern C++ game dev
     Tile(Vector2 position, Vector2 size);
-    ~Tile() = default; // Default destructor is sufficient
+    ~Tile(); // Destructor
 
     void Update();
-    void Draw(Texture2D grass, Texture2D road, Texture2D corner) const;
 
-    // Public modifier
-    void SetType(TileType newType);
+    // The Draw function now takes the textures it needs to render itself
+    void Draw(Texture2D grassTexture, Texture2D roadTexture) const;
 
-    // Getters, marked const for read-only access
+    // Sets the tile's type (e.g., GRASS, ROAD)
+    void SetType(TileType type);
     TileType GetType() const;
-    Vector2 GetPosition() const;
-    Vector2 GetSize() const;
+
+    // Gets the tile's bounding box for collisions
     Rectangle GetRect() const;
 
 private:
     Vector2 mPosition;
     Vector2 mSize;
     TileType mType;
-    Color mColor;
 };
+
+#endif // TILE_H

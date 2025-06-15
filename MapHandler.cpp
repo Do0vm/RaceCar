@@ -1,102 +1,136 @@
-
 #include "MapHandler.h"
-#include "Tile.h" 
+#include "Tile.h"
+#include "Constants.h"
 #include <iostream>
 
-MapManager::MapManager()
-// Defaulting to 15x15 to match your GameState example, change if needed
-    : rows(15), cols(15), tileSizeX(50), tileSizeY(50)
+// Constructor: Initializes the map dimensions.
+MapManager::MapManager() : mRows(MAP_ROWS), mCols(MAP_COLS)
 {
-    InitializeMap();
+    // Initialize the map grid with null pointers
+    mMap.resize(mRows, std::vector<Tile*>(mCols, nullptr));
 }
 
+// Destructor: Ensures the map is unloaded properly to prevent memory leaks.
 MapManager::~MapManager()
 {
     Unload();
 }
 
-void MapManager::InitializeMap()
+// Load: Reads a PNG image and builds the map based on its pixel colors.
+void MapManager::Load(const std::string& mapImagePath)
 {
-    // Make sure the map is clear before resizing
-    Unload();
-    mMap.resize(rows, std::vector<Tile*>(cols, nullptr));
-}
+    // Ensure any previous map is cleared before loading a new one.
+    ClearMap();
 
-// FIX 1: The Load function now creates a default GRASS tile.
-void MapManager::Load()
-{
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            if (!mMap[i][j]) {
-                // Use the existing Tile(Vector2 position, Vector2 size) ctor:
-                Vector2 pos = { j * static_cast<float>(tileSizeX), i * static_cast<float>(tileSizeY) };
-                Vector2 sz = { static_cast<float>(tileSizeX), static_cast<float>(tileSizeY) };
-                Tile* tile = new Tile(pos, sz);
-                // Set type to GRASS (so color, etc., get set)
-                tile->SetType(TileType::EMPTY); // if you want EMPTY by default; or skip
-                tile->SetType(TileType::ROAD);  // example: if default should be ROAD
-                // But per original intent: default GRASS. 
-                // Assuming you have a TileType::GRASS or similar:
-                tile->SetType(TileType::GRASS);
-                mMap[i][j] = tile;
+    Image mapImage = LoadImage(mapImagePath.c_str());
+    if (mapImage.data == nullptr)
+    {
+        std::cerr << "Error: Failed to load map image at " << mapImagePath << std::endl;
+        return;
+    }
+
+    // Check if the image dimensions match the expected map dimensions.
+    if (mapImage.width != mCols || mapImage.height != mRows)
+    {
+        std::cerr << "Warning: Map image dimensions (" << mapImage.width << "x" << mapImage.height
+            << ") do not match MAP_COLS/MAP_ROWS (" << mCols << "x" << mRows << ")." << std::endl;
+    }
+
+    Color* colors = LoadImageColors(mapImage);
+
+    for (int row = 0; row < mRows; ++row)
+    {
+        for (int col = 0; col < mCols; ++col)
+        {
+            Vector2 position = { col * TILE_WIDTH, row * TILE_HEIGHT };
+            Vector2 size = { TILE_WIDTH, TILE_HEIGHT };
+
+            // Create a new tile
+            mMap[row][col] = new Tile(position, size);
+
+            // Get the color of the pixel at the current position
+            Color pixelColor = colors[row * mapImage.width + col];
+
+            // --- THIS IS THE CORE LOGIC ---
+            // Set the tile type based on the pixel color.
+            // Pure Red for Road, Pure Green for Grass.
+            if (pixelColor.r == 255 && pixelColor.g == 0 && pixelColor.b == 0)
+            {
+                mMap[row][col]->SetType(TileType::ROAD);
             }
+            else // Default to GRASS for any other color
+            {
+                mMap[row][col]->SetType(TileType::GRASS);
+            }
+            // You can add more rules here, e.g., for blue water tiles:
+            // else if (pixelColor.b == 255 && pixelColor.r == 0 && pixelColor.g == 0) { ... }
         }
     }
+
+    // Clean up the loaded image data from CPU memory.
+    UnloadImageColors(colors);
+    UnloadImage(mapImage);
 }
 
-void MapManager::Start()
-{
-    std::cout << "MapManager Start\n";
-}
-
-void MapManager::Update()
-{
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            if (mMap[i][j]) {
-                // Call Update only if Tile has it; we will add an empty stub in Tile.
-                mMap[i][j]->Update();
-            }
-        }
-    }
-}
-
-
-void MapManager::Draw(Texture2D grassTexture, Texture2D roadStraightTexture, Texture2D roadCornerTexture)
-{
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            if (mMap[i][j]) {
-                // Pass the textures along to the tile's Draw method
-                mMap[i][j]->Draw(grassTexture, roadStraightTexture, roadCornerTexture);
-            }
-        }
-    }
-}
-
+// Unload: Calls ClearMap to free all resources.
 void MapManager::Unload()
 {
-    for (int i = 0; i < mMap.size(); ++i) { // Safer loop condition
-        for (int j = 0; j < mMap[i].size(); ++j) {
-            delete mMap[i][j];
-            mMap[i][j] = nullptr;
-        }
-    }
-    mMap.clear();
+    ClearMap();
 }
 
+// Update: Calls the Update function for every tile on the map.
+void MapManager::Update()
+{
+    for (int row = 0; row < mRows; ++row)
+    {
+        for (int col = 0; col < mCols; ++col)
+        {
+            if (mMap[row][col])
+            {
+                mMap[row][col]->Update();
+            }
+        }
+    }
+}
+
+// Draw: Calls the Draw function for every tile, passing the necessary textures.
+void MapManager::Draw(Texture2D grassTexture, Texture2D roadTexture)
+{
+    for (int row = 0; row < mRows; ++row)
+    {
+        for (int col = 0; col < mCols; ++col)
+        {
+            if (mMap[row][col])
+            {
+                mMap[row][col]->Draw(grassTexture, roadTexture);
+            }
+        }
+    }
+}
+
+// GetTileAt: A safe way to get a tile from the map.
+// Returns nullptr if the coordinates are out of bounds.
 Tile* MapManager::GetTileAt(int row, int col) const
 {
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
+    if (row >= 0 && row < mRows && col >= 0 && col < mCols)
+    {
         return mMap[row][col];
     }
     return nullptr;
 }
 
-void MapManager::ResizeMap(int newRows, int newCols)
+// ClearMap: A private helper function to delete all tile objects and clear the vector.
+void MapManager::ClearMap()
 {
-    rows = newRows;
-    cols = newCols;
-    InitializeMap(); 
-    Load();
+    for (int row = 0; row < mRows; ++row)
+    {
+        for (int col = 0; col < mCols; ++col)
+        {
+            if (mMap[row][col])
+            {
+                delete mMap[row][col];
+                mMap[row][col] = nullptr;
+            }
+        }
+    }
 }

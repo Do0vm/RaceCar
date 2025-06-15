@@ -2,12 +2,12 @@
 #define CONSTANTS_H
 
 // Screen Dimensions
-constexpr int SCREEN_WIDTH = 1920;
-constexpr int SCREEN_HEIGHT = 1080;
+constexpr int SCREEN_WIDTH = 800;
+constexpr int SCREEN_HEIGHT = 800;
 
 // Map Dimensions (number of tiles)
-constexpr int MAP_COLS = 15;
-constexpr int MAP_ROWS = 15;
+constexpr int MAP_COLS = 16;
+constexpr int MAP_ROWS = 16;
 
 // Calculated Tile Dimensions
 constexpr float TILE_WIDTH = (float)SCREEN_WIDTH / MAP_COLS;
@@ -28,8 +28,14 @@ constexpr float STEERING_DRAG_FACTOR = 0.007f;
 constexpr float COLLISION_BOUNCE_FACTOR = -0.8f;
 constexpr float COLLISION_RADIUS = 99.0f;
 
+enum TileType {
+    GRASS, 
+    ROAD   
+};
+
 // Tile Colors
 constexpr Color TILE_COLOR_EMPTY = GREEN;
 constexpr Color TILE_COLOR_ROAD = GRAY;
+constexpr Color TILE_COLOR_GRASS = RED;
 
 #endif // CONSTANTS_H
