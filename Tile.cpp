@@ -34,9 +34,7 @@ void Tile::SetType(TileType newType)
     case TileType::ROAD:
         mColor = TILE_COLOR_ROAD;
         break;
-    case TileType::TURRET:
-        mColor = TILE_COLOR_TURRET;
-        break;
+
     }
 }
 

@@ -56,8 +56,8 @@ void Car::Draw() const
 void Car::HandleInput()
 {
     float accelerationInput = 0.0f;
-    if (IsKeyDown(KEY_W)) accelerationInput = 1.0f;
-    if (IsKeyDown(KEY_S)) accelerationInput = -1.0f;
+    if (IsKeyDown(KEY_W)) accelerationInput = 9.0f;
+    if (IsKeyDown(KEY_S)) accelerationInput = -9.0f;
 
     float turnInput = 0.0f;
     if (IsKeyDown(KEY_A)) turnInput = -1.0f;

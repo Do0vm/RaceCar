@@ -36,9 +36,9 @@ int typeMap[MAP_ROWS][MAP_COLS] = {
 };
 
 void LoadGameResources() {
-    grassTexture = LoadTexture("assets/tile_grass.png");
-    roadStraightTexture = LoadTexture("assets/road_straight.png");
-    roadCornerTexture = LoadTexture("assets/road_corner.png");
+    grassTexture = LoadTexture("resources/assets/tile_grass.png");
+    roadStraightTexture = LoadTexture("resources/assets/road_straight.png");
+    roadCornerTexture = LoadTexture("resources/assets/road_corner.png");
     gameFont = GetFontDefault();
 }
 
@@ -52,7 +52,7 @@ void UnloadGameResources() {
 void InitGame() {
     currentGameState = START_SCREEN;
     car.Load();
-
+    map.Load();
 }
 
 void InitMap() {

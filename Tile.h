@@ -7,14 +7,10 @@
 enum TileType {
     GRASS = 0,
     ROAD_STRAIGHT_VERTICAL = 1,
-    ROAD_STRAIGHT_HORIZONTAL = 2,
-    ROAD_CORNER_NW = 3,
-    ROAD_CORNER_NE = 4,
-    ROAD_CORNER_SW = 5,
-    ROAD_CORNER_SE = 6,
+
     EMPTY,
     ROAD,
-    TURRET
+ 
 };
 
 class Tile
