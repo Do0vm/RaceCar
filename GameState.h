@@ -27,6 +27,7 @@ void DrawPlayingScreen();
 
 void DrawTimer();
 
+void UnloadGame();
 
 void UpdateDrawFrame();
 
