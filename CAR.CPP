@@ -48,10 +48,13 @@ void Car::Unload()
 
 void Car::Update(const MapManager& mapManager)
 {
-    if (!mIsBouncing)
-    {
-        HandleInput();
-    }
+
+    HandleInput();
+
+    //if (!mIsBouncing)
+    //{
+    //    HandleInput();
+    //}
     ApplyPhysics(mapManager);
     UpdateCollisionCircles();
 }
