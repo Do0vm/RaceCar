@@ -62,7 +62,7 @@ void MapManager::Load(const std::string& mapImagePath)
     // Initialize checkpoints
     if (!mCheckpoints.empty()) {
         for (size_t i = 0; i < mCheckpoints.size(); ++i) {
-            mCheckpoints[i]->SetActive(i == 0); // Activate only the first one
+            mCheckpoints[i]->SetActive(i == 0); 
         }
     }
 

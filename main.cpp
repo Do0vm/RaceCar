@@ -1,6 +1,6 @@
 #include "raylib.h"
 #include "Constants.h"
-#include "GameState.h" // The only header you need for the game loop
+#include "GameState.h" 
 
 int main()
 {
