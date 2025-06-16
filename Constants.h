@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include "raylib.h"
+
 // Screen Dimensions
 constexpr int SCREEN_WIDTH = 750;
 constexpr int SCREEN_HEIGHT = 750;
@@ -13,28 +15,18 @@ constexpr int MAP_ROWS = 16;
 constexpr float TILE_WIDTH = (float)SCREEN_WIDTH / MAP_COLS;
 constexpr float TILE_HEIGHT = (float)SCREEN_HEIGHT / MAP_ROWS;
 
-//// Car Physics Constants
-//constexpr float MAX_VELOCITY = 900.0f;
-//constexpr float MAX_REVERSE_VELOCITY = -150.0f;
-//constexpr float ACCELERATION = 350.0f;
-//constexpr float BRAKING_ACCELERATION = 500.0f;
-//constexpr float FRICTION = 180.0f;
-//
-//constexpr float MAX_ANGULAR_VELOCITY = 2.0f;
-//constexpr float ANGULAR_ACCELERATION = 1.3f;
-//constexpr float STEERING_FRICTION = 7.0f;
-//constexpr float STEERING_DRAG_FACTOR = 0.007f;
+// Game Rules
+const int WIN_SCORE = 5;
 
-
-
+// Tile Types
 enum TileType {
-    GRASS, 
-    ROAD   
+    GRASS,
+    ROAD,
+    CHECKPOINT
 };
 
-// Tile Colors
-constexpr Color TILE_COLOR_EMPTY = GREEN;
-constexpr Color TILE_COLOR_ROAD = GRAY;
-constexpr Color TILE_COLOR_GRASS = RED;
+constexpr Color TILE_COLOR_ROAD = { 255, 0, 0, 255 }; 
+constexpr Color TILE_COLOR_CHECKPOINT_DATA = { 0, 0, 255, 255 }; 
+constexpr Color TILE_COLOR_CHECKPOINT_ACTIVE = { 0, 255, 0, 255 };
 
-#endif // CONSTANTS_H
+#endif 

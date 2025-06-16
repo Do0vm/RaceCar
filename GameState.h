@@ -9,26 +9,8 @@ enum GameScreen {
     END_SCREEN
 };
 
-// --- Function Declarations ---
-
-void LoadGameResources();
-
-void UnloadGameResources();
-
 void InitGame();
-
-void UpdateStartScreen();
-
-void DrawStartScreen();
-
-void UpdatePlayingScreen();
-
-void DrawPlayingScreen();
-
-void DrawTimer();
-
 void UnloadGame();
-
 void UpdateDrawFrame();
 
 #endif // GAME_STATE_H

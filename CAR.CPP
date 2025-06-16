@@ -1,10 +1,11 @@
 #include "Car.h"
 #include "Constants.h"
-#include <cmath> 
-#include "Tile.h" 
+#include <cmath>
+#include <string>
+#include "Tile.h"
 
 Car::Car()
-    : mPosition({ 0, 0 }), mSize({ 0, 0 }), mVelocity(0.0f), mRotation(0.0f),
+    : mPosition({ 0, 0 }), mSize({ 0, 0 }), mVelocity(0.0f), mRotation(0.0f), mScore(0),
     mAccelerationInput(0.0f), mRotationInput(0.0f), mIsBraking(false),
     mTexture({ 0 }), mIsBouncing(false), mKeyUp(0), mKeyDown(0), mKeyLeft(0),
     mKeyRight(0), mKeyBrake(0)
@@ -16,6 +17,7 @@ Car::Car(Vector2 initialPosition, int keyUp, int keyDown, int keyLeft, int keyRi
     mSize({ 0, 0 }),
     mVelocity(0.0f),
     mRotation(0.0f),
+    mScore(0),
     mAccelerationInput(0.0f),
     mRotationInput(0.0f),
     mIsBraking(false),
@@ -28,7 +30,6 @@ Car::Car(Vector2 initialPosition, int keyUp, int keyDown, int keyLeft, int keyRi
     mKeyBrake(keyBrake)
 {
 }
-
 
 Car::~Car()
 {
@@ -48,13 +49,7 @@ void Car::Unload()
 
 void Car::Update(const MapManager& mapManager)
 {
-
     HandleInput();
-
-    //if (!mIsBouncing)
-    //{
-    //    HandleInput();
-    //}
     ApplyPhysics(mapManager);
     UpdateCollisionCircles();
 }
@@ -67,23 +62,27 @@ void Car::Draw() const
     DrawTexturePro(mTexture, source, dest, origin, mRotation + 90.0f, WHITE);
 }
 
+void Car::DrawScore(int posX, int posY, const char* playerName) const
+{
+    std::string scoreText = std::string(playerName) + ": " + std::to_string(mScore);
+    DrawText(scoreText.c_str(), posX, posY, 20, WHITE);
+}
+
 void Car::HandleInput()
 {
     mAccelerationInput = 0.0f;
-    if (IsKeyDown(mKeyUp)) mAccelerationInput = 1.0f;    
-    if (IsKeyDown(mKeyDown)) mAccelerationInput = -1.0f; 
+    if (IsKeyDown(mKeyUp)) mAccelerationInput = 1.0f;
+    if (IsKeyDown(mKeyDown)) mAccelerationInput = -1.0f;
 
-    mIsBraking = IsKeyDown(mKeyBrake); 
+    mIsBraking = IsKeyDown(mKeyBrake);
 
     mRotationInput = 0.0f;
-    if (IsKeyDown(mKeyLeft)) mRotationInput = -1.0f;   
-    if (IsKeyDown(mKeyRight)) mRotationInput = 1.0f;  
+    if (IsKeyDown(mKeyLeft)) mRotationInput = -1.0f;
+    if (IsKeyDown(mKeyRight)) mRotationInput = 1.0f;
 }
-
 
 void Car::ApplyPhysics(const MapManager& mapManager)
 {
-    // --- Determine Surface Properties ---
     Tile* currentTile = mapManager.GetTileAtPixel(mPosition);
     bool onGrass = (currentTile && currentTile->GetType() == TileType::GRASS);
 
@@ -92,7 +91,6 @@ void Car::ApplyPhysics(const MapManager& mapManager)
     float currentFriction = onGrass ? GRASS_FRICTION : ROAD_FRICTION;
     float currentSteering = onGrass ? GRASS_STEERING : ROAD_STEERING;
 
-    // --- Apply Acceleration & Braking ---
     if (mIsBraking)
     {
         mVelocity -= BRAKING_FORCE * (mVelocity > 0 ? 1.0f : -1.0f) * GetFrameTime();
@@ -102,7 +100,6 @@ void Car::ApplyPhysics(const MapManager& mapManager)
         mVelocity += currentAcceleration * mAccelerationInput * GetFrameTime();
     }
 
-    // --- Apply Friction ---
     if (std::abs(mAccelerationInput) < 0.1f && std::abs(mVelocity) > 0)
     {
         mVelocity -= currentFriction * (mVelocity > 0 ? 1.0f : -1.0f) * GetFrameTime();
@@ -112,35 +109,29 @@ void Car::ApplyPhysics(const MapManager& mapManager)
         }
     }
 
-    // --- Clamp Velocity ---
     if (mVelocity > currentMaxSpeed) mVelocity = currentMaxSpeed;
     if (mVelocity < REVERSE_SPEED) mVelocity = REVERSE_SPEED;
 
-    // --- Apply Rotation ---
     if (std::abs(mVelocity) > 1.0f)
     {
         float speedFactor = std::min(std::abs(mVelocity) / 200.0f, 1.0f);
         mRotation += mRotationInput * currentSteering * speedFactor * (mVelocity > 0 ? 1.0f : -1.0f) * 100.0f * GetFrameTime();
     }
 
-    // --- Update Position ---
     float angleInRadians = mRotation * DEG2RAD;
     mPosition.x += mVelocity * cos(angleInRadians) * GetFrameTime();
     mPosition.y += mVelocity * sin(angleInRadians) * GetFrameTime();
 
-    // --- Handle Bouncing State ---
     if (mIsBouncing && std::abs(mVelocity) < 20.0f) {
         mIsBouncing = false;
     }
 }
-
 
 void Car::UpdateCollisionCircles()
 {
     float angleInRadians = mRotation * DEG2RAD;
     float cosA = cos(angleInRadians);
     float sinA = sin(angleInRadians);
-
     float frontDistance = (mSize.y * CAR_VISUAL_SCALE) / 2.0f - COLLISION_RADIUS;
 
     mFrontCircleCenter.x = mPosition.x + cosA * frontDistance;
@@ -162,7 +153,6 @@ void Car::Bounce()
 bool Car::IsCollidingWithTile(const Tile& tile) const
 {
     const Rectangle tileRect = tile.GetRect();
-
     if (CheckCollisionCircleRec(mFrontCircleCenter, COLLISION_RADIUS, tileRect) ||
         CheckCollisionCircleRec(mBackCircleCenter, COLLISION_RADIUS, tileRect))
     {
@@ -179,12 +169,23 @@ void Car::Reset(Vector2 newPosition)
     mAccelerationInput = 0.0f;
     mRotationInput = 0.0f;
     mIsBouncing = false;
+    mScore = 0;
 }
 
 void Car::SetPosition(Vector2 pos)
 {
     mPosition = pos;
     UpdateCollisionCircles();
+}
+
+void Car::AddPoint()
+{
+    mScore++;
+}
+
+int Car::GetScore() const
+{
+    return mScore;
 }
 
 Rectangle Car::GetBoundingBox() const

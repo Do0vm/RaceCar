@@ -38,29 +38,37 @@ void MapManager::Load(const std::string& mapImagePath)
         {
             Vector2 position = { col * TILE_WIDTH, row * TILE_HEIGHT };
             Vector2 size = { TILE_WIDTH, TILE_HEIGHT };
-
             mMap[row][col] = new Tile(position, size);
 
             Color pixelColor = colors[row * mapImage.width + col];
 
-            
-            if (pixelColor.r == 255 && pixelColor.g == 0 && pixelColor.b == 0)
+            if (pixelColor.r == TILE_COLOR_ROAD.r && pixelColor.g == TILE_COLOR_ROAD.g && pixelColor.b == TILE_COLOR_ROAD.b)
             {
                 mMap[row][col]->SetType(TileType::ROAD);
             }
-            else 
+            else if (pixelColor.r == TILE_COLOR_CHECKPOINT_DATA.r && pixelColor.g == TILE_COLOR_CHECKPOINT_DATA.g && pixelColor.b == TILE_COLOR_CHECKPOINT_DATA.b)
+            {
+                mMap[row][col]->SetType(TileType::CHECKPOINT);
+                // All checkpoints are on road tiles
+                mCheckpoints.push_back(mMap[row][col]);
+            }
+            else
             {
                 mMap[row][col]->SetType(TileType::GRASS);
             }
-            
         }
     }
 
-    
+    // Initialize checkpoints
+    if (!mCheckpoints.empty()) {
+        for (size_t i = 0; i < mCheckpoints.size(); ++i) {
+            mCheckpoints[i]->SetActive(i == 0); // Activate only the first one
+        }
+    }
+
     UnloadImageColors(colors);
     UnloadImage(mapImage);
 }
-
 
 void MapManager::Unload()
 {
@@ -95,7 +103,6 @@ void MapManager::Draw(Texture2D grassTexture, Texture2D roadTexture)
     }
 }
 
-
 Tile* MapManager::GetTileAtPixel(Vector2 pixelPosition) const
 {
     if (pixelPosition.x < 0 || pixelPosition.y < 0 ||
@@ -111,7 +118,6 @@ Tile* MapManager::GetTileAtPixel(Vector2 pixelPosition) const
     return GetTileAt(row, col);
 }
 
-
 Tile* MapManager::GetTileAt(int row, int col) const
 {
     if (row >= 0 && row < mRows && col >= 0 && col < mCols)
@@ -120,6 +126,35 @@ Tile* MapManager::GetTileAt(int row, int col) const
     }
     return nullptr;
 }
+
+int MapManager::GetCheckpointCount() const
+{
+    return mCheckpoints.size();
+}
+
+Tile* MapManager::GetCheckpoint(int index) const
+{
+    if (index >= 0 && index < mCheckpoints.size())
+    {
+        return mCheckpoints[index];
+    }
+    return nullptr;
+}
+
+void MapManager::ActivateNextCheckpoint(int& currentIndex)
+{
+    if (mCheckpoints.empty()) return;
+
+    // Deactivate current
+    GetCheckpoint(currentIndex)->SetActive(false);
+
+    // Move to next index, wrapping around
+    currentIndex = (currentIndex + 1) % mCheckpoints.size();
+
+    // Activate new one
+    GetCheckpoint(currentIndex)->SetActive(true);
+}
+
 
 void MapManager::ClearMap()
 {
@@ -134,4 +169,5 @@ void MapManager::ClearMap()
             }
         }
     }
+    mCheckpoints.clear();
 }

@@ -5,8 +5,8 @@
 int main()
 {
     // Initialization
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Retro Racer - Map Selection");
-    SetTargetFPS(60);
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "RAYLIB RETRO RACER");
+    SetTargetFPS(144);
 
     InitGame();
 

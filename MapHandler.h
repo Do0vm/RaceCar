@@ -1,10 +1,12 @@
-#ifndef MAPMANAGER_H
-#define MAPMANAGER_H
+#ifndef MAP_HANDLER_H
+#define MAP_HANDLER_H
 
 #include "raylib.h"
 #include <vector>
 #include <string>
-#include "Tile.h" 
+
+class Tile;
+
 class MapManager
 {
 public:
@@ -16,15 +18,21 @@ public:
     void Update();
     void Draw(Texture2D grassTexture, Texture2D roadTexture);
 
+    Tile* GetTileAtPixel(Vector2 pixelPosition) const;
     Tile* GetTileAt(int row, int col) const;
 
-    Tile* GetTileAtPixel(Vector2 pixelPosition) const;
+    // Checkpoint management
+    int GetCheckpointCount() const;
+    Tile* GetCheckpoint(int index) const;
+    void ActivateNextCheckpoint(int& currentIndex);
 
 private:
     void ClearMap();
-    std::vector<std::vector<Tile*>> mMap;
+
     int mRows;
     int mCols;
+    std::vector<std::vector<Tile*>> mMap;
+    std::vector<Tile*> mCheckpoints;
 };
 
-#endif // MAPMANAGER_H
+#endif

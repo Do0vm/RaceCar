@@ -2,50 +2,43 @@
 #include "Constants.h"
 #include "MapHandler.h"
 #include "Car.h"
+#include "Tile.h"
 #include <string>
 #include <vector>
 #include <iomanip>
 #include <sstream>
 
 // --- Global Objects and Variables ---
-
-// Game State
 GameScreen currentGameState;
-
-// Textures & Fonts
 Texture2D grassTexture;
 Texture2D roadTexture;
 Font gameFont;
-
-// Map Selection
 std::vector<Texture2D> mapPreviews;
 std::vector<std::string> mapFilePaths;
 int selectedMapIndex = -1;
-
-// Game Objects
 Car car1;
 Car car2;
+Car* winner = nullptr;
 MapManager g_mapManager;
-
-// Game-specific variables
+int activeCheckpointIndex = 0;
 double gameStartTime = 0.0;
 
-//nternal Logic ---
+// --- Internal Logic ---
 void LoadGameResources();
 void UnloadGameResources();
 void UpdateStartScreen();
 void DrawStartScreen();
 void UpdatePlayingScreen();
 void DrawPlayingScreen();
-void DrawTimer();
-
-// --- Core Game Functions ---
+void UpdateEndScreen();
+void DrawEndScreen();
+void DrawHUD();
 
 void InitGame() {
     currentGameState = START_SCREEN;
     LoadGameResources();
     car1 = Car(Vector2{ 500, 600 }, KEY_W, KEY_S, KEY_A, KEY_D, KEY_SPACE);
-    car2 = Car(Vector2{ 450, 600 }, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_RIGHT_SHIFT); 
+    car2 = Car(Vector2{ 450, 600 }, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_RIGHT_SHIFT);
 
     car1.Load();
     car2.Load();
@@ -76,35 +69,25 @@ void UnloadGame() {
 }
 
 void UpdateDrawFrame() {
-    // --- Update Logic ---
+    BeginDrawing();
+    ClearBackground(BLACK);
+
     switch (currentGameState) {
     case START_SCREEN:
         UpdateStartScreen();
-        break;
-    case PLAYING:
-        UpdatePlayingScreen();
-        break;
-    case END_SCREEN:
-        break;
-    }
-
-    // --- Drawing Logic ---
-    BeginDrawing();
-    switch (currentGameState) {
-    case START_SCREEN:
         DrawStartScreen();
         break;
     case PLAYING:
+        UpdatePlayingScreen();
         DrawPlayingScreen();
         break;
     case END_SCREEN:
+        UpdateEndScreen();
+        DrawEndScreen();
         break;
     }
     EndDrawing();
 }
-
-
-// --- Internal State-Specific Functions ---
 
 void LoadGameResources() {
     grassTexture = LoadTexture("resources/assets/tile_grass.png");
@@ -118,10 +101,16 @@ void UnloadGameResources() {
 }
 
 void UpdateStartScreen() {
-    for (int i = 0; i < mapPreviews.size(); ++i) {
+    for (size_t i = 0; i < mapPreviews.size(); ++i) {
         if (IsKeyPressed(KEY_ONE + i)) {
             selectedMapIndex = i;
             g_mapManager.Load(mapFilePaths[selectedMapIndex].c_str());
+
+            car1.Reset({ 500, 600 }); 
+            car2.Reset({ 450, 600 });
+            winner = nullptr;
+            activeCheckpointIndex = 0;
+
             currentGameState = PLAYING;
             gameStartTime = GetTime();
             break;
@@ -130,8 +119,7 @@ void UpdateStartScreen() {
 }
 
 void DrawStartScreen() {
-    ClearBackground(BLACK);
-    const char* titleText = "Retro Racer Deluxe";
+    const char* titleText = "RAYLIB RETRO RACER";
     const char* promptText = "Choose your track";
     int titleFontSize = 40;
     int promptFontSize = 20;
@@ -152,7 +140,6 @@ void DrawStartScreen() {
         float currentX = startX + i * (128 + padding);
         DrawTextureEx(mapPreviews[i], { currentX, startY }, 0, 8.0f, WHITE);
         DrawRectangleLines(currentX - 2, startY - 2, 128 + 4, 128 + 4, RAYWHITE);
-
         std::string mapNumText = std::to_string(i + 1);
         int textWidth = MeasureText(mapNumText.c_str(), 40);
         DrawText(mapNumText.c_str(), currentX + 64 - (textWidth / 2.0f), startY + 140, 40, WHITE);
@@ -163,28 +150,41 @@ void UpdatePlayingScreen() {
     car1.Update(g_mapManager);
     car2.Update(g_mapManager);
 
-    Vector2 car1Pos = car1.GetPosition();
-    int car1GridX = static_cast<int>(car1Pos.x / TILE_WIDTH);
-    int car1GridY = static_cast<int>(car1Pos.y / TILE_HEIGHT);
+    // --- Wall Collision Logic ---
+    auto handleWallCollision = [](Car& car) {
+        Vector2 carPos = car.GetPosition();
+        int carGridX = static_cast<int>(carPos.x / TILE_WIDTH);
+        int carGridY = static_cast<int>(carPos.y / TILE_HEIGHT);
 
-    for (int y = car1GridY - 1; y <= car1GridY + 1; ++y) {
-        for (int x = car1GridX - 1; x <= car1GridX + 1; ++x) {
-            Tile* tile = g_mapManager.GetTileAt(y, x);
-            if (tile && tile->GetType() == TileType::GRASS && car1.IsCollidingWithTile(*tile)) {
-                car1.Bounce();
+        for (int y = carGridY - 1; y <= carGridY + 1; ++y) {
+            for (int x = carGridX - 1; x <= carGridX + 1; ++x) {
+                Tile* tile = g_mapManager.GetTileAt(y, x);
+                if (tile && tile->GetType() == TileType::GRASS && car.IsCollidingWithTile(*tile)) {
+                    car.Bounce();
+                }
             }
         }
-    }
+        };
+    handleWallCollision(car1);
+    handleWallCollision(car2);
 
-    Vector2 car2Pos = car2.GetPosition();
-    int car2GridX = static_cast<int>(car2Pos.x / TILE_WIDTH);
-    int car2GridY = static_cast<int>(car2Pos.y / TILE_HEIGHT);
-
-    for (int y = car2GridY - 1; y <= car2GridY + 1; ++y) {
-        for (int x = car2GridX - 1; x <= car2GridX + 1; ++x) {
-            Tile* tile = g_mapManager.GetTileAt(y, x);
-            if (tile && tile->GetType() == TileType::GRASS && car2.IsCollidingWithTile(*tile)) {
-                car2.Bounce();
+    // --- Checkpoint Logic ---
+    Tile* activeCheckpoint = g_mapManager.GetCheckpoint(activeCheckpointIndex);
+    if (activeCheckpoint && activeCheckpoint->IsActive()) {
+        if (car1.IsCollidingWithTile(*activeCheckpoint)) {
+            car1.AddPoint();
+            g_mapManager.ActivateNextCheckpoint(activeCheckpointIndex);
+            if (car1.GetScore() >= WIN_SCORE) {
+                winner = &car1;
+                currentGameState = END_SCREEN;
+            }
+        }
+        else if (car2.IsCollidingWithTile(*activeCheckpoint)) {
+            car2.AddPoint();
+            g_mapManager.ActivateNextCheckpoint(activeCheckpointIndex);
+            if (car2.GetScore() >= WIN_SCORE) {
+                winner = &car2;
+                currentGameState = END_SCREEN;
             }
         }
     }
@@ -192,22 +192,55 @@ void UpdatePlayingScreen() {
 
 void DrawPlayingScreen() {
     ClearBackground(DARKGREEN);
-
     g_mapManager.Draw(grassTexture, roadTexture);
-
-
     car1.Draw();
     car2.Draw();
-
-    DrawTimer();
-    DrawFPS(10, 40);
+    DrawHUD();
 }
 
-void DrawTimer() {
+void UpdateEndScreen() {
+    if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
+        currentGameState = START_SCREEN;
+    }
+}
+
+void DrawEndScreen() {
+    // Draw the final game state in the background
+    DrawPlayingScreen();
+
+    // Overlay with a semi-transparent black
+    DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, { 0, 0, 0, 150 });
+
+    std::string winText = "GAME OVER";
+    if (winner == &car1) {
+        winText = "PLAYER 1 WINS!";
+    }
+    else if (winner == &car2) {
+        winText = "PLAYER 2 WINS!";
+    }
+
+    int titleFontSize = 60;
+    int promptFontSize = 20;
+
+    int titleTextWidth = MeasureText(winText.c_str(), titleFontSize);
+    DrawText(winText.c_str(), (SCREEN_WIDTH - titleTextWidth) / 2, SCREEN_HEIGHT / 2 - 40, titleFontSize, GOLD);
+
+    const char* promptText = "Press ENTER to return to the Main Menu";
+    int promptTextWidth = MeasureText(promptText, promptFontSize);
+    DrawText(promptText, (SCREEN_WIDTH - promptTextWidth) / 2, SCREEN_HEIGHT / 2 + 40, promptFontSize, LIGHTGRAY);
+}
+
+
+void DrawHUD() {
     double elapsedTime = GetTime() - gameStartTime;
     std::stringstream stream;
     stream << std::fixed << std::setprecision(2) << elapsedTime;
     std::string timeString = "Time: " + stream.str();
 
-    DrawTextEx(gameFont, timeString.c_str(), { 10.0f, 10.0f }, 20.0f, 2.0f, WHITE);
+    DrawText(timeString.c_str(), 10, 10, 20, WHITE);
+
+    car1.DrawScore(10, 40, "Player 1");
+    car2.DrawScore(10, 70, "Player 2");
+
+    DrawFPS(SCREEN_WIDTH - 100, 10);
 }
