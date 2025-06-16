@@ -1,9 +1,17 @@
 #include "Car.h"
 #include "Constants.h"
 #include <cmath> 
-#include "Tile.h" // **FIX 1:** Include the full Tile definition.
+#include "Tile.h" 
 
-Car::Car(Vector2 initialPosition)
+Car::Car()
+    : mPosition({ 0, 0 }), mSize({ 0, 0 }), mVelocity(0.0f), mRotation(0.0f),
+    mAccelerationInput(0.0f), mRotationInput(0.0f), mIsBraking(false),
+    mTexture({ 0 }), mIsBouncing(false), mKeyUp(0), mKeyDown(0), mKeyLeft(0),
+    mKeyRight(0), mKeyBrake(0)
+{
+}
+
+Car::Car(Vector2 initialPosition, int keyUp, int keyDown, int keyLeft, int keyRight, int keyBrake)
     : mPosition(initialPosition),
     mSize({ 0, 0 }),
     mVelocity(0.0f),
@@ -12,9 +20,15 @@ Car::Car(Vector2 initialPosition)
     mRotationInput(0.0f),
     mIsBraking(false),
     mTexture({ 0 }),
-    mIsBouncing(false)
+    mIsBouncing(false),
+    mKeyUp(keyUp),
+    mKeyDown(keyDown),
+    mKeyLeft(keyLeft),
+    mKeyRight(keyRight),
+    mKeyBrake(keyBrake)
 {
 }
+
 
 Car::~Car()
 {
@@ -53,12 +67,14 @@ void Car::Draw() const
 void Car::HandleInput()
 {
     mAccelerationInput = 0.0f;
-    if (IsKeyDown(KEY_W)) mAccelerationInput = 1.0f;
-    if (IsKeyDown(KEY_S)) mAccelerationInput = -1.0f;
-    mIsBraking = IsKeyDown(KEY_SPACE);
+    if (IsKeyDown(mKeyUp)) mAccelerationInput = 1.0f;    
+    if (IsKeyDown(mKeyDown)) mAccelerationInput = -1.0f; 
+
+    mIsBraking = IsKeyDown(mKeyBrake); 
+
     mRotationInput = 0.0f;
-    if (IsKeyDown(KEY_A)) mRotationInput = -1.0f;
-    if (IsKeyDown(KEY_D)) mRotationInput = 1.0f;
+    if (IsKeyDown(mKeyLeft)) mRotationInput = -1.0f;   
+    if (IsKeyDown(mKeyRight)) mRotationInput = 1.0f;  
 }
 
 

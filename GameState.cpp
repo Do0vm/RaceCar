@@ -1,4 +1,4 @@
-﻿#include "GameState.h"
+#include "GameState.h"
 #include "Constants.h"
 #include "MapHandler.h"
 #include "Car.h"
@@ -20,16 +20,17 @@ Font gameFont;
 // Map Selection
 std::vector<Texture2D> mapPreviews;
 std::vector<std::string> mapFilePaths;
-int selectedMapIndex = -1; 
+int selectedMapIndex = -1;
 
 // Game Objects
-Car car = Car(Vector2{ 500, 600 });
-MapManager g_mapManager; 
+Car car1;
+Car car2;
+MapManager g_mapManager;
 
 // Game-specific variables
 double gameStartTime = 0.0;
 
-// --- Function Prototypes for Internal Logic ---
+//nternal Logic ---
 void LoadGameResources();
 void UnloadGameResources();
 void UpdateStartScreen();
@@ -43,9 +44,12 @@ void DrawTimer();
 void InitGame() {
     currentGameState = START_SCREEN;
     LoadGameResources();
-    car.Load();
+    car1 = Car(Vector2{ 500, 600 }, KEY_W, KEY_S, KEY_A, KEY_D, KEY_SPACE);
+    car2 = Car(Vector2{ 450, 600 }, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_RIGHT_SHIFT); 
 
-    
+    car1.Load();
+    car2.Load();
+
     int i = 1;
     while (true) {
         std::string path = "resources/maps/map" + std::to_string(i) + ".png";
@@ -62,9 +66,10 @@ void InitGame() {
 
 void UnloadGame() {
     UnloadGameResources();
-    car.Unload();
-    g_mapManager.Unload(); 
-    
+    car1.Unload();
+    car2.Unload();
+    g_mapManager.Unload();
+
     for (const auto& texture : mapPreviews) {
         UnloadTexture(texture);
     }
@@ -80,7 +85,6 @@ void UpdateDrawFrame() {
         UpdatePlayingScreen();
         break;
     case END_SCREEN:
-        
         break;
     }
 
@@ -119,7 +123,7 @@ void UpdateStartScreen() {
             selectedMapIndex = i;
             g_mapManager.Load(mapFilePaths[selectedMapIndex].c_str());
             currentGameState = PLAYING;
-            gameStartTime = GetTime(); 
+            gameStartTime = GetTime();
             break;
         }
     }
@@ -138,7 +142,6 @@ void DrawStartScreen() {
     int promptTextWidth = MeasureText(promptText, promptFontSize);
     DrawTextEx(gameFont, promptText, { (SCREEN_WIDTH - promptTextWidth) / 2.0f, 160 }, (float)promptFontSize, 2.0f, LIGHTGRAY);
 
-    // Calculate layout for map previews
     int numMaps = mapPreviews.size();
     float padding = 40.0f;
     float totalWidth = (numMaps * 128) + ((numMaps - 1) * padding);
@@ -147,8 +150,8 @@ void DrawStartScreen() {
 
     for (int i = 0; i < numMaps; i++) {
         float currentX = startX + i * (128 + padding);
-        DrawTextureEx(mapPreviews[i], { currentX, startY }, 0, 8.0f, WHITE); // Draw map preview scaled up
-        DrawRectangleLines(currentX - 2, startY - 2, 128 + 4, 128 + 4, RAYWHITE); // Add a border
+        DrawTextureEx(mapPreviews[i], { currentX, startY }, 0, 8.0f, WHITE);
+        DrawRectangleLines(currentX - 2, startY - 2, 128 + 4, 128 + 4, RAYWHITE);
 
         std::string mapNumText = std::to_string(i + 1);
         int textWidth = MeasureText(mapNumText.c_str(), 40);
@@ -156,40 +159,48 @@ void DrawStartScreen() {
     }
 }
 
-
 void UpdatePlayingScreen() {
-    
-    car.Update(g_mapManager);
+    car1.Update(g_mapManager);
+    car2.Update(g_mapManager);
 
-    
-    Vector2 carPos = car.GetPosition();
-    int carGridX = static_cast<int>(carPos.x / TILE_WIDTH);
-    int carGridY = static_cast<int>(carPos.y / TILE_HEIGHT);
+    Vector2 car1Pos = car1.GetPosition();
+    int car1GridX = static_cast<int>(car1Pos.x / TILE_WIDTH);
+    int car1GridY = static_cast<int>(car1Pos.y / TILE_HEIGHT);
 
-    
-    for (int y = carGridY - 1; y <= carGridY + 1; ++y) {
-        for (int x = carGridX - 1; x <= carGridX + 1; ++x) {
+    for (int y = car1GridY - 1; y <= car1GridY + 1; ++y) {
+        for (int x = car1GridX - 1; x <= car1GridX + 1; ++x) {
             Tile* tile = g_mapManager.GetTileAt(y, x);
-            // If the tile is grass and the car is touching it, trigger the bounce effect.
-            if (tile && tile->GetType() == TileType::GRASS && car.IsCollidingWithTile(*tile)) {
-                car.Bounce();
+            if (tile && tile->GetType() == TileType::GRASS && car1.IsCollidingWithTile(*tile)) {
+                car1.Bounce();
+            }
+        }
+    }
+
+    Vector2 car2Pos = car2.GetPosition();
+    int car2GridX = static_cast<int>(car2Pos.x / TILE_WIDTH);
+    int car2GridY = static_cast<int>(car2Pos.y / TILE_HEIGHT);
+
+    for (int y = car2GridY - 1; y <= car2GridY + 1; ++y) {
+        for (int x = car2GridX - 1; x <= car2GridX + 1; ++x) {
+            Tile* tile = g_mapManager.GetTileAt(y, x);
+            if (tile && tile->GetType() == TileType::GRASS && car2.IsCollidingWithTile(*tile)) {
+                car2.Bounce();
             }
         }
     }
 }
 
-
 void DrawPlayingScreen() {
     ClearBackground(DARKGREEN);
 
     g_mapManager.Draw(grassTexture, roadTexture);
-    car.Update(g_mapManager);
-    car.Draw();
-    Rectangle carBox = car.GetBoundingBox();
-    DrawRectangleLinesEx(carBox, 2, RED);
+
+
+    car1.Draw();
+    car2.Draw();
 
     DrawTimer();
-    DrawFPS(10, 40); 
+    DrawFPS(10, 40);
 }
 
 void DrawTimer() {
